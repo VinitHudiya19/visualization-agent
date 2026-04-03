@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Test outputs (generated charts)
+test_outputs/
+charts/
+
+# Pytest
+.pytest_cache/
+
+# OS
+Thumbs.db
+.DS_Store
