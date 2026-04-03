@@ -1,11 +1,11 @@
 <p align="center">
   <h1 align="center">🎨 Visualization Agent</h1>
   <p align="center">
-    <strong>AI-Powered Data Visualization Microservice</strong>
+    <strong>Production-Grade Plotly Spec Generator Microservice</strong>
     <br />
-    Automatically generates the best chart types for any dataset using Groq LLM + Rule-based engine
+    A backend service that automatically aggregates data and generates intelligent Plotly JSON specifications using Groq LLM + a Rule-based engine. Designed specifically for integration with the Orchestrator UI.
     <br /><br />
-    <a href="#-quick-start">Quick Start</a> · <a href="#-api-endpoints">API Docs</a> · <a href="#-project-structure">Structure</a> · <a href="#-features">Features</a>
+    <a href="#-quick-start">Quick Start</a> · <a href="#-api-endpoints">API Docs</a> · <a href="#-features">Features</a>
   </p>
 </p>
 
@@ -14,38 +14,22 @@
   <img src="https://img.shields.io/badge/FastAPI-0.104+-009688?logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/LLM-Groq_Llama_3.3-F55036?logo=meta&logoColor=white" />
   <img src="https://img.shields.io/badge/Charts-Plotly-3F4F75?logo=plotly&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tests-33_Passing-brightgreen?logo=pytest&logoColor=white" />
-</p>
-
----
-
-## 📸 Sample Output
-
-> These charts were **auto-generated** by the `/auto-insights` endpoint — the AI analyzed a sales dataset and picked the best visualizations on its own.
-
-<p align="center">
-  <img src="docs/chart_bar.png" width="48%" alt="Bar Chart" />
-  <img src="docs/chart_pie.png" width="48%" alt="Donut Pie Chart" />
-</p>
-<p align="center">
-  <img src="docs/chart_box.png" width="48%" alt="Box Plot" />
+  <img src="https://img.shields.io/badge/Tests-Passing-brightgreen?logo=pytest&logoColor=white" />
 </p>
 
 ---
 
 ## 💡 What Is This?
 
-**Visualization Agent** is a FastAPI microservice (part of the (https://github.com) multi-agent data analysis platform) that:
+**Visualization Agent** is a specialized, backend-only FastAPI microservice built to run within a larger multi-agent data analysis platform. It does **not** serve HTML or frontend dashboards. Instead, its sole purpose is to:
 
-1. **Receives** a small aggregated dataset (columns + rows)
-2. **Analyzes** the data using a dual recommendation system:
-   - 🧠 **Rule-based engine** — instant, zero-cost, covers common patterns
-   - 🤖 **Groq LLM (Llama 3.3 70B)** — picks optimal charts when rules are ambiguous
-3. **Generates** production-quality Plotly chart specifications
-4. **Renders** PNG images using Kaleido
-5. **Returns** spec JSON + base64 PNG + standalone HTML
-
-The star feature: **`/auto-insights`** — send any dataset and the AI automatically picks the **best 4-5 visualizations** that reveal the most impactful insights.
+1. **Receive** unstructured or raw tabular data.
+2. **Aggregate** the data automatically using `pandas` (aware of the target chart type).
+3. **Analyze** the data using a dual recommendation system:
+   - 🧠 **Rule-based engine** — instant, zero-cost, covers common patterns.
+   - 🤖 **Groq LLM (Llama 3.3 70B)** — picks optimal charts and formats complex layouts.
+4. **Generate** a clean, valid, and deeply customized Plotly JSON specification.
+5. **Return** the JSON payload back to the orchestrator frontend (React/Next.js) for seamless rendering.
 
 ---
 
@@ -53,59 +37,13 @@ The star feature: **`/auto-insights`** — send any dataset and the AI automatic
 
 | Feature | Description |
 |---------|------------|
-| 🎯 **Auto-Insights** | AI picks the best visualizations for your data automatically |
-| 📊 **10 Chart Types** | bar, line, scatter, pie (donut), histogram, heatmap, box, treemap, waterfall, area |
-| 🎨 **10 Color Schemes** | corporate, executive, vibrant, neon, pastel, ocean, dark, midnight, monochrome, slate |
-| 🖼️ **PNG Rendering** | Charts rendered as PNG via Kaleido, saved to disk with UUID filenames |
-| 📋 **Dashboard Generator** | Multi-chart HTML dashboard with glassmorphism dark theme |
-| ⚡ **Async Parallel** | All insight charts generated simultaneously using `asyncio.gather` |
-| 🔄 **Smart Retry** | LLM failures automatically retried with correction prompt |
-| 📈 **Data Statistics** | LLM receives computed min/max/mean/top categories for smarter charts |
-| ✅ **33 Unit Tests** | Full test coverage with mocked Groq + Kaleido |
-
----
-
-## 🏗️ Project Structure
-
-```
-viz-agent/
-│
-├── app/                          # Main application package
-│   ├── __init__.py
-│   ├── main.py                   # FastAPI app — all 6 endpoints
-│   ├── config.py                 # Settings from .env + structured logging
-│   │
-│   ├── llm/                      # LLM integration layer
-│   │   ├── __init__.py
-│   │   └── chart_selector.py     # Groq API calls → Plotly spec generation
-│   │                              #   ├── generate_spec()        — single chart spec
-│   │                              #   ├── auto_select_insights()  — LLM picks best visuals
-│   │                              #   └── compute_data_stats()    — enriches LLM context
-│   │
-│   └── utils/                    # Utility modules (no LLM)
-│       ├── __init__.py
-│       ├── chart_rules.py        # Rule-based recommender (if/else logic)
-│       │                          #   ├── recommend_chart()       — chart type selection
-│       │                          #   └── suggest_best_insights() — auto-suggest tasks
-│       ├── color_palettes.py     # 10 color schemes + background configs
-│       └── renderer.py           # Kaleido PNG render (async executor)
-│
-├── tests/                        # Test suite (pytest)
-│   ├── __init__.py
-│   ├── test_chart_rules.py       # 18 tests — all rule branches
-│   ├── test_chart_selector.py    # 12 tests — mocked Groq client
-│   └── test_renderer.py          # 3 tests  — mocked Kaleido
-│
-├── docs/                         # Screenshots for README
-├── charts/                       # Auto-created — saved PNG outputs
-├── test_outputs/                 # Generated by test_live.py
-│
-├── .env                          # Environment variables (API keys)
-├── .gitignore
-├── requirements.txt
-├── test_live.py                  # Live integration test script
-└── README.md                     # You are here!
-```
+| 🎯 **Auto-Insights** | AI analyzes tabular data and automatically suggests the 2 best visualizations. |
+| 📊 **10 Chart Types** | Bar, line, scatter, pie (donut), histogram, heatmap, box, treemap, waterfall, area. |
+| 🛡️ **Spec Sanitization** | All LLM output is strictly sanitized to guarantee crash-free React Plotly rendering. |
+| 🧮 **Smart Aggregation** | The backend automatically groups by category/date before sending data to the LLM. |
+| 🔄 **Sequential Generation** | Prevents LLM rate-limiting by generating multiple charts sequentially. |
+| 🔌 **Orchestrator Ready** | Native `/run` endpoint designed to seamlessly process tasks from an upstream orchestrator agent. |
+| 🖼️ **Fallback PNG Rendering** | Optional internal integration with Kaleido to produce base64 PNG fallback images. |
 
 ---
 
@@ -113,35 +51,22 @@ viz-agent/
 
 ### Prerequisites
 
-- **Python 3.12+** installed
+- **Python 3.12+**
 - **Groq API Key** — get one free at [console.groq.com](https://console.groq.com)
 
-### 1. Clone the Repository
+### 1. Installation
 
 ```bash
-git clone https://github.com/VinitHudiya19/viz-agent.git
-cd viz-agent
-```
+git clone https://github.com/VinitHudiya19/visualization-agent.git
+cd visualization-agent
 
-### 2. Create Virtual Environment (Recommended)
-
-```bash
+# Create venv and install
 python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS/Linux
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment
+### 2. Configure Environment
 
 Create a `.env` file in the project root:
 
@@ -149,208 +74,126 @@ Create a `.env` file in the project root:
 GROQ_API_KEY=gsk_your_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 STORAGE_TYPE=local
-CHART_OUTPUT_PATH=./charts
 MAX_DATA_ROWS=1000
 PORT=8003
 ```
 
-> ⚠️ **Important:** Replace `gsk_your_api_key_here` with your actual Groq API key.
-
-### 5. Start the Server
+### 3. Start the Server
 
 ```bash
 python -m uvicorn app.main:app --reload --port 8003
 ```
 
-### 6. Open the API Docs
-
-Navigate to **http://localhost:8003/docs** in your browser — you'll see the interactive Swagger UI with all 6 endpoints ready to test.
+Navigate to **http://localhost:8003/docs** for the interactive Swagger UI.
 
 ---
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint | Description | LLM? |
-|--------|----------|-------------|------|
-| `GET` | `/health` | Service status, model, available schemes & chart types | ❌ |
-| `POST` | `/recommend` | Rule-based chart type recommendation | ❌ |
-| `POST` | `/chart` | Full pipeline: auto-detect chart → generate spec → render PNG | ✅ |
-| `POST` | `/chart/render` | Render an existing Plotly spec to PNG | ❌ |
-| `POST` | `/dashboard` | Multi-chart HTML dashboard (up to 4 charts) | ✅ |
-| `POST` | `/auto-insights` | 🌟 **AI picks best 4-5 visualizations automatically** | ✅ |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Service status, model, available schemes & chart types. |
+| `POST` | `/run` | **(Primary)** Unified orchestration entry point. Receives context and routes to the correct internal pipeline. |
+| `POST` | `/auto-insights` | 🌟 AI picks the best 2 visualizations automatically and returns their Plotly specs. |
+| `POST` | `/chart` | Generates a specific Plotly spec for a provided dataset and intentional task. |
+| `POST` | `/recommend` | Rule-based chart type recommendation (Zero LLM cost). |
+| `POST` | `/chart/render` | *(Utility)* Renders an existing Plotly spec into a PNG. |
 
-### Example: Auto-Insights Request
+### Example: `/run` Endpoint payload
+
+The orchestrator sends tasks to the `/run` endpoint like this:
 
 ```bash
-curl -X POST http://localhost:8003/auto-insights \
+curl -X POST http://localhost:8003/run \
   -H "Content-Type: application/json" \
   -d '{
-    "data": {
-      "columns": [
-        {"name": "month", "semantic": "datetime"},
-        {"name": "region", "semantic": "categorical", "unique": 4},
-        {"name": "revenue", "semantic": "numeric"},
-        {"name": "units", "semantic": "numeric"}
-      ],
-      "rows": [
-        {"month": "2024-01", "region": "North", "revenue": 12000, "units": 150},
-        {"month": "2024-02", "region": "South", "revenue": 15000, "units": 200},
-        {"month": "2024-03", "region": "East", "revenue": 9500, "units": 120},
-        {"month": "2024-04", "region": "West", "revenue": 18000, "units": 300}
-      ]
-    },
-    "color_scheme": "corporate",
-    "render_png": true,
-    "max_insights": 5
+    "task_id": "viz-123",
+    "agent": "viz",
+    "description": "Show the trend of revenue over the last 12 months",
+    "payload": {},
+    "_context": {
+      "data": { "columns": [...], "rows": [...] }
+    }
   }'
 ```
 
-### Example Response (Simplified)
+### Example Response
 
 ```json
 {
-  "total_requested": 5,
-  "total_generated": 5,
-  "charts": [
-    {
-      "chart_type": "line",
-      "task": "Reveal the trend and trajectory of revenue over month",
-      "status": "success",
-      "spec": { "data": [...], "layout": {...} },
-      "png_base64": "iVBORw0KGgo...",
-      "file_path": "charts/a1b2c3d4.png"
-    },
-    ...
-  ],
-  "dashboard_html": "<!DOCTYPE html>..."
+  "task_id": "viz-123",
+  "status": "completed",
+  "result": {
+    "chart_type": "line",
+    "spec": {
+      "data": [
+        {
+          "x": ["2024-01", "2024-02", "2024-03"],
+          "y": [12000, 15000, 9500],
+          "type": "scatter",
+          "mode": "lines+markers"
+        }
+      ],
+      "layout": {
+        "title": "Revenue Trend Reveals Q2 Dip",
+        ...
+      }
+    }
+  }
 }
 ```
 
 ---
 
-## 🎨 Color Schemes
+## 🏛️ Architecture
 
-| Scheme | Style | Best For |
-|--------|-------|----------|
-| `corporate` | Professional blues & greens | Business presentations |
-| `executive` | Deep navy & purple | Boardroom reports |
-| `vibrant` | Bold pinks, oranges, greens | Marketing dashboards |
-| `neon` | Bright cyan, magenta, lime | Dark-mode apps |
-| `pastel` | Soft lavender & mint | Light reports |
-| `ocean` | Azure blues & teals | Environmental data |
-| `dark` | Purple & teal on dark bg | Dark-mode dashboards |
-| `midnight` | Muted blues on dark navy | Night-mode analytics |
-| `monochrome` | Grayscale | Print-friendly reports |
-| `slate` | Cool grays | Minimalist design |
+```text
+ ┌──────────────────────┐
+ │  Orchestrator Agent  │ (Controller)
+ └──────────┬───────────┘
+            │ HTTP POST /run (Task + Data)
+ ┌──────────▼───────────┐
+ │   FastAPI Backend    │ (Visualization Agent)
+ └──────────┬───────────┘
+            │
+      ┌─────┴──────┐
+      ▼            ▼
+ ┌──────────┐ ┌──────────┐ 
+ │  Pandas  │ │ Groq LLM │ 
+ │Aggregator│ │  Llama 3 │ 
+ └──────────┘ └──────────┘ 
+      │            │
+      └─────┬──────┘
+            ▼            
+   Sanitized Plotly JSON
+     Returned to Caller
+```
+
+1. **Aggregation First**: The agent intercepts raw data, identifies the required chart type, and uses Pandas to strictly group and aggregate the dataset (e.g. by region or date).
+2. **Context Enrichment**: The aggregated data, along with computed basic statistics, is formatted into a prompt.
+3. **LLM Generation**: The LLM writes the layout, title, hover-templates, and color traces strictly conforming to JSON format.
+4. **Sanitization Filter**: The output passes through `_sanitize_spec()` to enforce the React Plotly schema, dropping hallucinatory fields.
 
 ---
 
 ## 🧪 Running Tests
 
 ```bash
-# Run all 33 tests
-python -m pytest tests/ -v
-
-# Run specific test file
-python -m pytest tests/test_chart_rules.py -v
-```
-
-### Live Integration Test
-
-Make sure the server is running, then:
-
-```bash
+# Run the live end-to-end testing suite
 python test_live.py
+
+# Run all unit tests
+python -m pytest tests/ -v
 ```
 
-This hits all 5 endpoints with real sample data, generates PNGs, and saves them to `./test_outputs/`.
-
 ---
 
-## 🏛️ Architecture
+## 📄 License & Acknowledgments
 
-```
-                         ┌─────────────────────┐
-                         │   Client / Browser   │
-                         └──────────┬───────────┘
-                                    │ HTTP
-                         ┌──────────▼───────────┐
-                         │   FastAPI (main.py)   │
-                         │   Port 8003           │
-                         └──────────┬───────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-           ┌──────────────┐ ┌─────────────┐ ┌────────────┐
-           │ Chart Rules  │ │   Groq LLM  │ │  Renderer  │
-           │ (rule-based) │ │ (Llama 3.3) │ │ (Kaleido)  │
-           │ No API cost  │ │ chart_sel.  │ │  PNG export │
-           └──────────────┘ └─────────────┘ └────────────┘
-                    │               │               │
-                    ▼               ▼               ▼
-              chart_type      Plotly JSON      PNG + base64
-                              spec             saved to disk
-```
-
-### How the Dual Recommendation Works
-
-1. **Rule-based engine runs first** — instant, free, handles ~80% of cases
-2. **If rules return `None`** (ambiguous) — LLM is called to decide
-3. **LLM always generates the spec** — but type selection stays cheap
-
----
-
-## ⚙️ Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GROQ_API_KEY` | — | Your Groq API key (required) |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | LLM model to use |
-| `STORAGE_TYPE` | `local` | Storage backend (local filesystem) |
-| `CHART_OUTPUT_PATH` | `./charts` | Where PNGs are saved |
-| `MAX_DATA_ROWS` | `1000` | Max rows per request (returns 400 if exceeded) |
-| `PORT` | `8003` | Server port |
-
----
-
-## 📦 Tech Stack
-
-| Technology | Purpose |
-|-----------|---------|
-| [FastAPI](https://fastapi.tiangolo.com/) | Async web framework |
-| [Groq](https://groq.com/) | LLM inference (free tier) |
-| [Plotly](https://plotly.com/python/) | Chart specification |
-| [Kaleido](https://github.com/nicolo-ribaudo/kaleido) | Static PNG rendering |
-| [Pydantic](https://pydantic.dev/) | Request/response validation |
-| [Pandas](https://pandas.pydata.org/) | Data manipulation |
-| [Pytest](https://pytest.org/) | Unit testing |
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 🙏 Acknowledgments
-
-- **Groq** — for providing free-tier LLM API access
-- **Plotly** — for the powerful charting library
-- **FastAPI** — for the amazing async Python framework
-
----
+- Licensed under [MIT License](LICENSE).
+- Powered by **[Groq](https://groq.com/)** fast inference.
+- Spec generation relies on **[Plotly Python](https://plotly.com/python/)**.
 
 <p align="center">
-  <sub>Built with ❤️ as part of the multi-agent data analysis platform</sub>
+  <sub>Built as a structural microservice for a sophisticated multi-agent topology.</sub>
 </p>
